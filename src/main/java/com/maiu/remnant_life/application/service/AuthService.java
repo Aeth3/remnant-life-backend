@@ -9,6 +9,8 @@ import com.maiu.remnant_life.domain.repository.UserRepository;
 
 import com.maiu.remnant_life.utils.JwtUtil;
 
+import com.maiu.remnant_life.presentation.dto.RegisterRequest;
+
 @Service
 public class AuthService {
 
@@ -17,24 +19,24 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     public AuthService(UserRepository userRepository,
-                       PasswordEncoder encoder,
-                       JwtUtil jwtUtil) {
+            PasswordEncoder encoder,
+            JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.encoder = encoder;
         this.jwtUtil = jwtUtil;
     }
 
-    public void register(User user) {
+    public void register(RegisterRequest request) {
 
-        String email = user.getEmail().trim().toLowerCase();
+        String email = request.getEmail().trim().toLowerCase();
 
         if (userRepository.findByEmail(email).isPresent()) {
             throw new RuntimeException("Email already exists");
         }
-
+        User user = new User();
         user.setEmail(email);
-        user.setPassword(encoder.encode(user.getPassword()));
-
+        user.setPassword(encoder.encode(request.getPassword()));
+        user.setName(request.getName());
         userRepository.save(user);
     }
 

@@ -34,6 +34,8 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testAnnotationProcessor("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation("com.bucket4j:bucket4j-core:8.10.1")
 }
 
 tasks.withType<Test> {

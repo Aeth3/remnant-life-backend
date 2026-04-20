@@ -1,7 +1,8 @@
 package com.maiu.remnant_life.presentation.controller;
 
-import com.maiu.remnant_life.domain.model.LoginRequest;
 import com.maiu.remnant_life.presentation.dto.AuthDto;
+import com.maiu.remnant_life.presentation.dto.LoginRequest;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -9,10 +10,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.maiu.remnant_life.application.service.AuthService;
-import com.maiu.remnant_life.domain.model.User;
 
 import java.util.Map;
 
+import com.maiu.remnant_life.presentation.dto.RegisterRequest;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
@@ -25,11 +28,10 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest user) {
         authService.register(user);
         return ResponseEntity.status(201).body(
-                Map.of("message", "User registered successfully")
-        );
+                Map.of("message", "User registered successfully"));
     }
 
     @PostMapping("/login")
