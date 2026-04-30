@@ -2,6 +2,9 @@ package com.maiu.remnant_life.utils;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
@@ -22,11 +25,12 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(jwtProperties.secret().getBytes());
     }
 
-    public String generateToken(String email) {
+    public String generateToken(String email, Set<String> roles) {
         return Jwts.builder()
                 .setSubject(email)
+                .claim("roles", roles)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // move to config later
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -51,4 +55,17 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
+    public Set<String> extractRoles(String token) {
+    Claims claims = getClaims(token);
+
+    Object rolesObj = claims.get("roles");
+
+    if (rolesObj instanceof List<?> list) {
+        return list.stream()
+                .map(Object::toString)
+                .collect(Collectors.toSet());
+    }
+
+    return Set.of();
+}
 }

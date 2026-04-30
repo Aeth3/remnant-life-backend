@@ -1,6 +1,5 @@
 package com.maiu.remnant_life.infrastructure.persistence.role;
 
-
 import com.maiu.remnant_life.domain.model.Role;
 import org.springframework.stereotype.Repository;
 
@@ -29,15 +28,20 @@ public class RoleRepositoryImpl implements RoleRepository {
     @Override
     public List<Role> findAll() {
         return jpaRepository.findAll().stream().map(e -> {
-            return new Role(e.getId(),e.getName(),e.getPermissions());
+            return new Role(e.getId(), e.getName(), e.getPermissions());
         }).collect(Collectors.toList());
     }
 
     @Override
     public Optional<Role> findById(Long id) {
-        return jpaRepository.findById(id).map(e->{
-            return new Role(e.getId(),e.getName(),e.getPermissions());
+        return jpaRepository.findById(id).map(e -> {
+            return new Role(e.getId(), e.getName(), e.getPermissions());
         });
     }
 
+    @Override
+    public Optional<Role> findByName(String name) {
+        return jpaRepository.findByNameIgnoreCase(name)
+                .map(e -> new Role(e.getId(), e.getName(), e.getPermissions()));
+    }
 }

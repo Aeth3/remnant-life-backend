@@ -1,15 +1,21 @@
 package com.maiu.remnant_life.application.service;
 
 import com.maiu.remnant_life.presentation.dto.AuthDto;
+
+import java.util.stream.Collectors;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.maiu.remnant_life.domain.model.User;
+import com.maiu.remnant_life.domain.repository.RoleRepository;
 import com.maiu.remnant_life.domain.repository.UserRepository;
 
 import com.maiu.remnant_life.utils.JwtUtil;
 
 import com.maiu.remnant_life.presentation.dto.RegisterRequest;
+import java.util.*;
+import com.maiu.remnant_life.domain.model.Role;
 
 @Service
 public class AuthService {
@@ -17,13 +23,16 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
     private final JwtUtil jwtUtil;
+    private final RoleRepository roleRepository;
 
     public AuthService(UserRepository userRepository,
             PasswordEncoder encoder,
-            JwtUtil jwtUtil) {
+            JwtUtil jwtUtil,
+            RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.encoder = encoder;
         this.jwtUtil = jwtUtil;
+        this.roleRepository = roleRepository;
     }
 
     public void register(RegisterRequest request) {
@@ -33,24 +42,44 @@ public class AuthService {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new RuntimeException("Email already exists");
         }
-        User user = new User();
-        user.setEmail(email);
-        user.setPassword(encoder.encode(request.getPassword()));
-        user.setName(request.getName());
+
+        Optional<Role> roleOpt = roleRepository.findByName("USER");
+
+        System.out.println("ROLE FOUND? " + roleOpt.isPresent());
+
+        roleOpt.ifPresent(r -> System.out.println("ROLE: " + r.getName()));
+
+        Role userRole = roleOpt
+                .orElseThrow(() -> new RuntimeException("Default role USER not found"));
+
+        Set<Role> roles = Set.of(userRole);
+
+        User user = new User(
+                request.getName(),
+                email,
+                encoder.encode(request.getPassword()),
+                roles);
+
         userRepository.save(user);
     }
 
     public AuthDto login(String email, String password) {
 
-        User user = userRepository.findByEmail(email)
+        String normalizedEmail = email.trim().toLowerCase();
+
+        User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
         if (!encoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtUtil.generateToken(email);
+        Set<String> roles = user.getRoles().stream()
+                .map(Role::getAuthority)
+                .collect(Collectors.toSet());
 
-        return new AuthDto(token);
+        String token = jwtUtil.generateToken(user.getEmail(), roles);
+
+        return new AuthDto(token, user.getName(), roles);
     }
 }

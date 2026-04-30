@@ -1,0 +1,20 @@
+# local
+docker compose up -d
+
+# ec2
+docker compose -p remnant-life-ec2 -f docker-compose-ec2.yml up -d
+
+# tag the image
+docker tag remnant-app:latest ajdamalan/remnant-life-ec2-app:x.x.x
+
+# push the image
+docker push ajdamalan/remnant-life-ec2-app:x.x.x
+
+# pull the image from your ec2
+sudo docker pull ajdamalan/remnant-life-ec2-app:x.x.x
+
+# run on ec2
+sudo docker run -d -p 8080:8080 \
+  --name remnant_app \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  ajdamalan/remnant-life-ec2-app:x.x.x

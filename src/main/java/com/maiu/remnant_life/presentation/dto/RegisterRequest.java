@@ -3,7 +3,7 @@ package com.maiu.remnant_life.presentation.dto;
 import jakarta.validation.constraints.*;
 
 public class RegisterRequest {
-    
+
     @NotBlank
     private String name;
     @Email
@@ -35,4 +35,5 @@ public class RegisterRequest {
     public String getPassword() {
         return password;
     }
+
 }

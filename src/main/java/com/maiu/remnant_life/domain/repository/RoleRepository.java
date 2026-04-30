@@ -11,4 +11,5 @@ public interface RoleRepository {
 
     Optional<Role> findById(Long id);
 
+    Optional<Role> findByName(String name);
 }

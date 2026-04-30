@@ -1,11 +1,6 @@
 package com.maiu.remnant_life.application.service;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import com.maiu.remnant_life.domain.model.Role;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,14 +34,13 @@ public class UserService {
 
         user.setEmail(email);
         user.setPassword(encoder.encode(user.getPassword()));
-
+        // user.setRoles(roles);
         User savedUser = userRepository.save(user);
 
         return new UserDto(
                 savedUser.getId(),
                 savedUser.getName(),
-                savedUser.getEmail()
-        );
+                savedUser.getEmail());
     }
 
     public List<UserDto> getUsers() {
@@ -59,26 +53,7 @@ public class UserService {
                 .toList();
     }
 
-    public UserDto assignRole(String email, Set<Role> roles) {
+    
 
-        String normalizedEmail = email.trim().toLowerCase();
 
-        User user = userRepository.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // ⚠️ Optional: validate roles not empty
-        if (roles == null || roles.isEmpty()) {
-            throw new RuntimeException("Roles cannot be empty");
-        }
-
-        user.setRoles(roles);
-
-        User updatedUser = userRepository.save(user);
-
-        return new UserDto(
-                updatedUser.getId(),
-                updatedUser.getName(),
-                updatedUser.getEmail()
-        );
-    }
 }

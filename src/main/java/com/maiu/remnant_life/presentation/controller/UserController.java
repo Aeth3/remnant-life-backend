@@ -1,28 +1,29 @@
 package com.maiu.remnant_life.presentation.controller;
 
-import com.maiu.remnant_life.domain.model.Role;
 import com.maiu.remnant_life.presentation.dto.UserDto;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.maiu.remnant_life.domain.model.User;
 
-
-
 import com.maiu.remnant_life.application.service.UserService;
 
 import java.util.List;
-import java.util.Set;
+
+import com.maiu.remnant_life.application.service.AdminService;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
+    private final AdminService adminService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AdminService adminService) {
         this.userService = userService;
+        this.adminService = adminService;
     }
 
     @PostMapping
@@ -36,13 +37,10 @@ public class UserController {
         return ResponseEntity.ok(userService.getUsers());
     }
 
-    @PutMapping("/assign-role")
-    public ResponseEntity<UserDto> assignRole(
-            @RequestParam String email,
-            @RequestBody Set<Role> roles) {
-
-        UserDto dto = userService.assignRole(email, roles);
-
-        return ResponseEntity.ok(dto);
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/users/{id}")
+    public void deleteUser(@PathVariable Long id) {
+        adminService.deleteUser(id);
     }
+
 }

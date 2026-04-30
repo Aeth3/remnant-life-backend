@@ -1,13 +1,14 @@
 package com.maiu.remnant_life.infrastructure.persistence.user;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
 import com.maiu.remnant_life.domain.model.User;
 import com.maiu.remnant_life.domain.repository.UserRepository;
+import com.maiu.remnant_life.infrastructure.persistence.role.RoleEntity;
+import com.maiu.remnant_life.domain.model.Role;
 
 @Repository
 public class UserRepositoryImpl implements UserRepository {
@@ -23,7 +24,6 @@ public class UserRepositoryImpl implements UserRepository {
 
         UserEntity entity;
 
-        // ✅ Check if updating or creating
         if (user.getId() != null) {
             entity = jpaRepository.findById(user.getId())
                     .orElse(new UserEntity());
@@ -31,47 +31,60 @@ public class UserRepositoryImpl implements UserRepository {
             entity = new UserEntity();
         }
 
-        // ✅ Set fields
         entity.setName(user.getName());
         entity.setEmail(user.getEmail());
         entity.setPassword(user.getPassword());
 
-        // ⚠️ If you have roles, set them here too
-        // entity.setRoles(mapRoles(user.getRoles()));
+        // ✅ Map roles properly
+        entity.setRoles(
+                user.getRoles().stream()
+                        .map(r -> {
+                            RoleEntity re = new RoleEntity();
+                            re.setId(r.getId());
+                            return re;
+                        })
+                        .collect(Collectors.toSet()));
 
         UserEntity saved = jpaRepository.save(entity);
 
         return toDomain(saved);
     }
+
     private User toDomain(UserEntity e) {
-        User u = new User();
-        u.setId(e.getId());
-        u.setName(e.getName());
-        u.setEmail(e.getEmail());
-        u.setPassword(e.getPassword());
-        return u;
+        Set<Role> roles = e.getRoles().stream()
+                .map(r -> new Role(r.getId(), r.getName(), r.getPermissions()))
+                .collect(Collectors.toSet());
+
+        User user = new User(
+                e.getName(),
+                e.getEmail(),
+                e.getPassword(),
+                roles);
+
+        user.setId(e.getId()); // ✅ set ID after creation
+
+        return user;
     }
+
     @Override
     public List<User> findAll() {
-        return jpaRepository.findAll().stream().map(e -> {
-            User u = new User();
-            u.setId(e.getId());
-            u.setName(e.getName());
-            u.setEmail(e.getEmail());
-            u.setPassword(e.getPassword());
-            return u;
-        }).collect(Collectors.toList());
+        return jpaRepository.findAll().stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Optional<User> findByEmail(String email) {
-        return jpaRepository.findByEmail(email).map(e -> {
-            User u = new User();
-            u.setId(e.getId());
-            u.setName(e.getName());
-            u.setEmail(e.getEmail());
-            u.setPassword(e.getPassword());
-            return u;
-        });
+        return jpaRepository.findByEmail(email)
+                .map(this::toDomain);
+    }
+
+    @Override
+    public void deleteUser(Long id) {
+        if (!jpaRepository.existsById(id)) {
+            throw new RuntimeException("User not found");
+        }
+
+        jpaRepository.deleteById(id);
     }
 }
